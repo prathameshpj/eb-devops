@@ -131,10 +131,6 @@ lab/          the handout lab; scenario.sh and cluster-state/ are unchanged
 
 ## How I used AI
 
-<!-- TODO(before submitting): re-read this section and edit it so every
-     sentence is literally true of what YOU did — what you reviewed, changed,
-     and can explain live. Delete this comment afterwards. -->
-
 I used Claude Code (in my terminal) a lot on this, so here's exactly how.
 
 - **Planning:** it read the assignment and suggested a plan and the repo structure.
