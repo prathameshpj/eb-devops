@@ -1,0 +1,43 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint-chart:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.16.3
+      - name: helm lint
+        run: helm lint chart/ --strict
+      - name: render with overrides (catches hardcoded values)
+        run: |
+          out=$(helm template demo chart/ --set replicaCount=3 --set config.appName=ci-check)
+          echo "$out" | grep -q 'replicas: 3'
+          echo "$out" | grep -q 'APP_NAME: "ci-check"'
+      - name: shellcheck setup.sh
+        run: shellcheck setup.sh
+
+  build-and-scan:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: build image (unit tests run inside the build)
+        run: docker build -t demo-service:${{ github.sha }} service/
+      - name: Trivy scan — fail on HIGH/CRITICAL
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: demo-service:${{ github.sha }}
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          format: table
+/
