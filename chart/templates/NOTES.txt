@@ -1,0 +1,9 @@
+{{ include "demo.fullname" . }} installed in namespace {{ .Release.Namespace }} ({{ .Values.replicaCount }} replicas).
+
+Verify:
+  kubectl -n {{ .Release.Namespace }} get pods,svc,ingress
+{{- if .Values.ingress.enabled }}
+  curl -s -H 'Host: {{ .Values.ingress.host }}' http://localhost/
+{{- end }}
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "demo.fullname" . }} 8080:{{ .Values.service.port }} &
+  curl -s http://localhost:8080/healthz

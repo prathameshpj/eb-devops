@@ -1,0 +1,72 @@
+# -- Number of pods. 2 by default so one can be drained/restarted without an
+#    outage (paired with the PodDisruptionBudget and maxUnavailable: 0).
+replicaCount: 2
+
+image:
+  repository: demo-service
+  # setup.sh builds and `kind load`s exactly this tag. Pin a version, never
+  # `latest`: with IfNotPresent a moving tag silently runs stale code.
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+
+# -- Rendered into the ConfigMap; exposed to the app as APP_NAME / VERSION.
+config:
+  appName: demo-service
+  version: "0.1.0"
+
+service:
+  type: ClusterIP
+  port: 80
+containerPort: 8080
+
+ingress:
+  enabled: true
+  className: nginx
+  host: demo.local
+  # tls:
+  #   - secretName: demo-local-tls
+  #     hosts: [demo.local]
+  tls: []
+
+# Measured, not guessed — see README "Resource requests and limits".
+resources:
+  requests:
+    cpu: 50m
+    memory: 32Mi
+  limits:
+    cpu: 250m
+    memory: 128Mi
+
+probes:
+  liveness:
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 2
+    failureThreshold: 3
+  readiness:
+    initialDelaySeconds: 2
+    periodSeconds: 5
+    timeoutSeconds: 2
+    failureThreshold: 3
+
+podDisruptionBudget:
+  enabled: true
+  maxUnavailable: 1
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  fsGroup: 10001
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
